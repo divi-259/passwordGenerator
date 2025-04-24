@@ -34,22 +34,64 @@ export default function App() {
     const lowerCaseCharacters = 'abcdefghijklmnopqrstuvwxyz';
     const numberCharacters = '0123456789';
     const symbolCharacters = '!@#$%^&*()_+';
-    if (upperCase) characterList += upperCaseCharacters;
-    if (lowerCase) characterList += lowerCaseCharacters;
-    if (numbers) characterList += numberCharacters;
-    if (symbols) characterList += symbolCharacters;
-    const passwordResult = createPassword(characterList, passwordLength);
+    const guaranteedChars: string[] = [];
+    if (upperCase) {
+      characterList += upperCaseCharacters;
+      guaranteedChars.push(randomChar(upperCaseCharacters));
+    }
+    if (lowerCase) {
+      characterList += lowerCaseCharacters;
+      guaranteedChars.push(randomChar(lowerCaseCharacters));
+    }
+    if (numbers) {
+      characterList += numberCharacters;
+      guaranteedChars.push(randomChar(numberCharacters));
+    }
+    if (symbols) {
+      characterList += symbolCharacters;
+      guaranteedChars.push(randomChar(symbolCharacters));
+    }
+
+    const passwordResult = createPassword(
+      characterList,
+      passwordLength,
+      guaranteedChars,
+    );
     setPassword(passwordResult);
     setIsPassGenerated(true);
   };
 
-  const createPassword = (characters: string, passwordLength: number) => {
-    let result = '';
-    for (let i = 0; i < passwordLength; i++) {
-      const characterIndex = Math.round(Math.random() * characters.length);
-      result += characters.charAt(characterIndex);
+  const createPassword = (
+    characters: string,
+    passwordLength: number,
+    requiredSets: string[],
+  ) => {
+    const passwordChars: string[] = [];
+
+    // Ensure one character from each selected category
+    requiredSets.forEach(set => {
+      passwordChars.push(randomChar(set));
+    });
+
+    // Fill the rest with random characters from combined pool
+    const remainingLength = passwordLength - passwordChars.length;
+    for (let i = 0; i < remainingLength; i++) {
+      passwordChars.push(randomChar(characters));
     }
-    return result;
+
+    // Shuffle to avoid predictable pattern
+    return shuffleArray(passwordChars).join('');
+  };
+
+  const randomChar = (set: string) =>
+    set.charAt(Math.floor(Math.random() * set.length));
+
+  const shuffleArray = (array: string[]) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
   };
 
   const resetPassword = () => {
